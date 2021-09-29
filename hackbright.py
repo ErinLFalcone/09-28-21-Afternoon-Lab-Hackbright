@@ -42,17 +42,50 @@ def make_new_student(first_name, last_name, github):
     Given a first name, last name, and GitHub account, add student to the
     database and print a confirmation message.
     """
-    pass
+    
+    QUERY = """
+        INSERT INTO students (first_name, last_name, github)
+        VALUES (:first_name, :last_name, :github)
+        """
+    
+    db.session.execute(QUERY, {'first_name': first_name,
+                               'last_name': last_name,
+                               'github': github})
+    db.session.commit()
+
+    print(f"Successfully added student: {first_name} {last_name}")
+    
 
 
-def get_project_by_title(title):
+def get_project_by_title(input_title):
     """Given a project title, print information about the project."""
-    pass
+
+    QUERY = """
+        SELECT *
+        FROM projects
+        WHERE title = :project_title
+        """
+
+    db_cursor = db.session.execute(QUERY, {'project_title': input_title})
+
+    row = db_cursor.fetchone()
+
+    print(f"Project title: {row[1]} \nProject Max Grade: {row[3]}\nProject Description: {row[2]}")    
 
 
 def get_grade_by_github_title(github, title):
     """Print grade student received for a project."""
-    pass
+    QUERY = """SELECT students.first_name, students.last_name, grades.project_title, grades.grade
+                FROM students
+                JOIN grades ON(students.github = grades.student_github)
+                WHERE github = :input_github
+                AND grades.project_title = :input_title
+                """
+    db_cursor = db.session.execute(QUERY, {'input_github': github, 'input_title': title})
+
+    row = db_cursor.fetchone()
+
+    print(f"Student: {row[0]} {row[1]}\nProject & Grade: {row[2]} {row[3]}")
 
 
 def assign_grade(github, title, grade):
@@ -82,6 +115,10 @@ def handle_input():
         elif command == "new_student":
             first_name, last_name, github = args  # unpack!
             make_new_student(first_name, last_name, github)
+
+        elif command == "project":
+            project_name = args 
+            get_project_by_title(project_name)
 
         else:
             if command != "quit":
